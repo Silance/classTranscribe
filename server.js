@@ -6,7 +6,13 @@ var zlib = require('zlib');
 var path = require('path');
 var mime = require('mime');
 var webvtt = require('./modules/webvtt');
+
+//var redis = require('redis');
 var client = require('./modules/redis');
+//var client = redis.createClient(6379, "localhost");
+
+
+
 var mailer = require('./modules/mailer');
 var validator = require('./modules/validator');
 var spawn = require('child_process').spawn;
@@ -20,9 +26,31 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 })); 
 app.use(express.static('public'));
-client.on("monitor", function (time, args, raw_reply) {
-    console.log(time + ": " + args); // 1458910076.446514:['set', 'foo', 'bar']
+
+
+
+client.set("tkey", "tval");
+client.set("tkey2", "tval2");
+console.log(client.keys("*"));
+client.get("tkey", function (err, reply) {
+    console.log(reply.toString()); // Will print `OK`
 });
+function redis_probe_keys() {
+    client.keys("*", function (err, reply) {
+        console.log(JSON.stringify(reply));
+        console.log(reply.toString()); // Will print `OK`
+    });
+}
+redis_probe_keys();
+client.get("missingkey", function(err, reply) {
+    // reply is null when the key is missing
+    console.log(reply);
+});
+console.log("-----end of redis probing----");
+
+
+
+
 
 var mustachePath = 'templates/';
 
@@ -240,6 +268,8 @@ app.post('/first', function (request, response) {
     }
     transcriptionPath = "captions/first/" + className + "/" + captionFileName;
     client.sadd("ClassTranscribe::Transcriptions::" + transcriptionPath, transcriptions);
+    //TODO:remove this debuging line
+    redis_probe_keys();
     fs.writeFileSync(transcriptionPath, transcriptions, {mode: 0777});
   });
 
@@ -614,7 +644,7 @@ client.on("monitor", function (time, args, raw_reply) {
 });
 
 client.on('error', function (error) {
-	console.log('redis error');
+	console.log('redis error'+error);
 });
 
 var port = 80;
