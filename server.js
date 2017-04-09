@@ -20,7 +20,6 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
   extended: true
 })); 
 app.use(express.static('public'));
-
 client.on("monitor", function (time, args, raw_reply) {
     console.log(time + ": " + args); // 1458910076.446514:['set', 'foo', 'bar']
 });
@@ -47,6 +46,26 @@ app.get('/', function (request, response) {
   var html = Mustache.render(homeMustache);
   response.end(html);
 });
+
+
+var managementMustache = fs.readFileSync(mustachePath + 'management.mustache').toString();
+app.get('/manage-classes', function (request, response) {
+  response.writeHead(200, {
+    'Content-Type': 'text/html'
+  });
+
+  var html = Mustache.render(managementMustache);
+  response.end(html);
+});
+
+
+
+
+
+
+
+
+
 
 var viewerMustache = fs.readFileSync(mustachePath + 'viewer.mustache').toString();
 app.get('/viewer/:className', function (request, response) {
@@ -504,6 +523,14 @@ function clearInactiveTranscriptions() {
 }
 
 var captionsMapping = {
+  //"cs241": require('./public/javascripts/data/captions/cs241.js'),
+  //"cs225": require('./public/javascripts/data/captions/cs225.js'),
+  //"cs225-sp16": require('./public/javascripts/data/captions/cs225-sp16.js'),
+  //"chem233-sp16": require('./public/javascripts/data/captions/chem233-sp16.js'),
+  //"adv582": require('./public/javascripts/data/captions/adv582.js'),
+  //"ece210": require('./public/javascripts/data/captions/ece210.js'),
+  //"cs446-fa16": require('./public/javascripts/data/captions/cs446-fa16.js'),
+
   "cs241": require('./public/javascripts/data/captions/cs241.js'),
   "cs225": require('./public/javascripts/data/captions/cs225.js'),
   "cs225-sp16": require('./public/javascripts/data/captions/cs225-sp16.js'),
@@ -594,3 +621,5 @@ var port = 80;
 app.listen(port, function () {
   console.log('listening on port ' + port + '!');
 });
+
+//------------------------------------------

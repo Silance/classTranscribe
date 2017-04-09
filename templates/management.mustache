@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Profile Management</title>
+
+    <link rel="stylesheet" type="text/css" href="stylesheets/resetHome.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/home.css" />
+    <link rel="stylesheet" type="text/css" href="stylesheets/style-responsive.css" />
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+</head>
+
+<body>
+
+<div class="container">
+
+
+    <select id="school-term">
+    </select>
+
+    <table class="table" id="course-list">
+        <tr id="#header">
+            <th >Subject</th>
+            <th>Course Number</th>
+            <th>Course Name</th>
+            <th>Course Instructor</th>
+            <th>Action</th>
+        </tr>
+    </table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <!-- Contact-->
+
+    <section class="contact" id="contact">
+        <h1>Contact</h1>
+        <hr/>
+
+        <div class="content">
+
+            <div class="contact-text">
+
+                Please DON'T use
+                the following e-mail address<br/><br/>
+
+                e-mail: <strong>classTranscribe@gmail.com</strong>
+
+            </div>
+
+
+        </div>
+
+    </section>
+
+
+    <section class="footer">
+
+        <div class="margin">
+
+            <div class="menu-footer">
+
+                <a href="#home">Home</a>
+                <a href="https://www.facebook.com/classtranscribe">Facebook</a>
+
+            </div>
+
+            <div class="copyright">© 2016. All Rights Reserved UIUC</div>
+
+        </div>
+
+    </section>
+
+</div>
+
+<!-- Scripts -->
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> <!-- jQuery -->
+<script src="/javascripts/libraries/jquery.parallax.js"></script> <!-- jQuery Parallax -->
+<script src="/javascripts/libraries/jquery.nicescroll.js"></script> <!-- jQuery NiceScroll -->
+<script src="/javascripts/libraries/jquery.sticky.js"></script> <!-- jQuery Stick Menu -->
+<script src="/javascripts/libraries/homeScript.js"></script> <!-- All script -->
+<script>
+    // testing data
+    var schoolTermsList = ["Spring 2016", "Fall 2016","Spring 2017", "Fall 2017", "Spring 2018"];
+    var CourseList = {"Spring 2016":[["CS123",123,"Class name A","Instructor A"],["CS223",223,"Class name B","Instructor A"],["CS323",323,"Class name C","Instructor C"]],
+        "Fall 2016":[["CS123",167,"Class name 167","Instructor C"],["CS545",545,"Class name 545","Instructor J"],["CS523",523,"Class name 523","Instructor Q"]],
+        "Spring 2017":[], "Fall 2017":[], "Spring 2018":[]};
+
+
+    // populate school term options
+    var termSelection = document.getElementById("school-term");
+    schoolTermsList.forEach(function(element) {
+        var option = document.createElement("option");
+        option.text = element;
+        option.value = element;
+        termSelection.add(option);
+    });
+
+    // populate course list for the selected term
+    var courses = document.getElementById("course-list");
+    $( "#school-term" ).change(function(e) {
+        var term = document.getElementById("school-term");
+        var selectedTerm = $("#school-term").val();
+        var classes = CourseList[selectedTerm];
+        var html = '';
+        classes.forEach(function(elem){
+            html += '<tr>';
+            for (var i = 0; i < 4; i++) {
+                html += '<td>' + elem[i] + '</td>';
+            }
+            html += '<td>' + '<button>action</button>' + '</td>';
+            html += '</tr>';
+
+            //append created html to the table body:
+            //$('#course-list').append(html);
+        });
+        $("#course-list").html(html);
+        //$( "div.courses-data" ).replaceWith(html);
+//        alert( selectedTerm);
+        // print out js object detail
+        //alert(JSON.stringify(e, null, 4));
+    });
+
+</script>
+
+</body>
+
+</html>
+
+
+
