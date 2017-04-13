@@ -89,8 +89,9 @@
 
 <section>
     Classes to add:
-    <ul id="kart">
-
+    <ul id="cart">
+        <li>1</li>
+        <li>2</li>
     </ul>
 </section>
 
@@ -149,6 +150,34 @@
 
 
 
+<form action = "/manage-classes/gettest" method = "post" id="testdataform">
+    <input type="text" name="g1" value="Upvote" />
+    <button type="submit" name="g2" id="testdatabutton" class="button" value="testvalue">testing data</button>
+</form>
+
+<!--bootstrap grid test -->
+<div class="container">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="row">
+                <div class="col-md-2">
+                    <a href="">About</a>
+                </div>
+                <div class="col-md-6">
+                    <a href="">Column2</a>
+                </div>
+                <div class="col-md-4">
+                    <a href="#myModal1" data-toggle="modal">SHARE</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+
 
 
 
@@ -158,7 +187,7 @@
 
 <!-- Scripts -->
 
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> <!-- jQuery -->
+<!--<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script> &lt;!&ndash; jQuery &ndash;&gt;-->
 <script src="/javascripts/libraries/jquery.parallax.js"></script> <!-- jQuery Parallax -->
 <script src="/javascripts/libraries/jquery.nicescroll.js"></script> <!-- jQuery NiceScroll -->
 <script src="/javascripts/libraries/jquery.sticky.js"></script> <!-- jQuery Stick Menu -->
@@ -223,6 +252,7 @@
         //alert("submit clicked");
         //alert( JSON.stringify($('#creation-form :input'), null, 4));
         //alert(JSON.stringify($('#creation-form').serializeArray(), null, 4));
+
         e.preventDefault();
         var term = document.getElementById("school-term");
         var newCourse = [];
@@ -247,6 +277,44 @@
                     '</tr>');
         }
     });
+
+
+    var x;
+    $( "#testdatabutton" ).click(function() {
+        console.log(x);
+        var html = "<li>"+"testli"+"</li>";
+        $('#cart').append(html);
+    });
+
+    $("#testdataform").submit(function(e){
+        e.preventDefault();
+        //$.ajax({});
+        console.log($("#testdataform").serializeArray());
+        $.ajax({
+            url : $(this).attr('action'),
+            type: "POST",
+            data: $("#testdataform").serialize(),
+            success: function (data) {
+                console.log(data);
+                x = data;
+            },
+            error: function (jXHR, textStatus, errorThrown) {
+                alert(errorThrown);
+            }
+        });
+    });
+
+
+
+
+
+    $( document ).ready(function() {
+        console.log( "ready!" );
+        x = "{{servervar1}}";
+        console.log("clientside-"+x);
+    });
+
+
 </script>
 
 </body>

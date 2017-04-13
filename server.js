@@ -28,7 +28,7 @@ app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
 app.use(express.static('public'));
 
 
-
+//----------------------redis testing-------------------
 client.set("tkey", "tval");
 client.set("tkey2", "tval2");
 console.log(client.keys("*"));
@@ -48,6 +48,7 @@ client.get("missingkey", function(err, reply) {
 });
 console.log("-----end of redis probing----");
 
+//----------------------end of redis testing-------------------
 
 
 
@@ -75,17 +76,35 @@ app.get('/', function (request, response) {
   response.end(html);
 });
 
+//----------------Management Section-------------------------------------------
+var testvar1="default var";
 
 var managementMustache = fs.readFileSync(mustachePath + 'management.mustache').toString();
 app.get('/manage-classes', function (request, response) {
   response.writeHead(200, {
     'Content-Type': 'text/html'
   });
-
-  var html = Mustache.render(managementMustache);
+    client.keys("*", function(err, reply) {
+        // reply is null when the key is missing
+        testvar1= reply.toString();
+        console.log("testvar initted");
+    });
+    var view = {
+        servervar1: testvar1,
+    };
+  var html = Mustache.render(managementMustache, view);
   response.end(html);
 });
 
+app.post('/manage-classes/gettest', function (request, response) {
+    //response.render(servervar1: testvar1);
+    response.send(testvar1);
+    console.log("req noted");
+    console.log(request.body);
+});
+
+
+//----------------Management Section-------------------------------------------
 
 
 
