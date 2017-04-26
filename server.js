@@ -23,8 +23,8 @@ var app = express();
 
 app.use(bodyParser.json());         // to support JSON-encoded bodies
 app.use(bodyParser.urlencoded({     // to support URL-encoded bodies
-  extended: true
-})); 
+    extended: true
+}));
 app.use(express.static('public'));
 
 
@@ -51,10 +51,10 @@ app.use(express.static('public'));
 
 //=======================Sample data for testing=====================================
 function getClassUid(university="", term="", number="", section="") {
-  if(!university|| !term|| !number|| !section){
-    console.log("potential problem in uid, empty/null value detected");
-  }
-  return university+"-"+term+"-"+number+"-"+section;
+    if(!university|| !term|| !number|| !section){
+        console.log("potential problem in uid, empty/null value detected");
+    }
+    return university+"-"+term+"-"+number+"-"+section;
 }
 // // test cases
 // console.log("uid-test-1");
@@ -68,46 +68,59 @@ function getClassUid(university="", term="", number="", section="") {
 
 
 
-// old sequential unique id
-client.get("ucid", function (err, reply) {
-   if(reply==null)
-       client.set("ucid", 100);
-});
-var schoolTermsList = ["Spring 2016", "Fall 2016","Spring 2017", "Fall 2017", "Spring 2018"];
-// 0-subject, 1-class number, 2-class name, 3-instructor name, 4-unique class id, 5-class description
-var courseList = {"Spring 2016":[["CS123",123,"Class name A","Instructor A", 1],
-    ["CS223",223,"Class name B","Instructor A", 2],
-    ["CS323",323,"Class name C","Instructor C",3]],
-    "Fall 2016":[["CS123",167,"Class name 167","Instructor C",4],
-        ["CS545",545,"Class name 545","Instructor J",5],
-        ["CS523",523,"Class name 523","Instructor Q",6]],
-    "Spring 2017":[], "Fall 2017":[], "Spring 2018":[]};
-schoolTermsList.forEach( function ( e) {
-    client.sadd("ClassTranscribe::Terms", "ClassTranscribe::Terms::"+e);
-    courseList[e].forEach(function (course) {
-      // Add  course
+//// old sequential unique id
+//client.get("ucid", function (err, reply) {
+//   if(reply==null)
+//       client.set("ucid", 100);
+//});
+
+var schoolTermsList = ["Spring 2016", "Fall 2016","Spring 2017", "Fall 2017", "Spring 2018", "All"];
+// 0-subject, 1-class number, 2-Section-number, 3-class name, 4-class description, 5-University, 6-instructor name
+var courseList = {"Spring 2016":[["Computer Science", "CS123","AGX","Intro to CS", "no desc yet", "UIUC","Instructor A. P."],
+    ["Computer Science", "CS223","GAX","More intro to CS", "desc", "UIUC","Instructor B. P."],
+    ["History", "HIST123","AGX","Intro to Ancient Civ", "desc", "UIUC","Instructor H. P."]],
+    "Fall 2016":[["Mathematics", "MATH343","XGX","Linear Algebra", "desc", "UIUC","Instructor B. E."],
+        ["Computer Science", "CS423","GHX","Even More intro to CS", "desc", "UIUC","Instructor W. J."],
+        ["Sociology", "SOCI323","AGX","Society and XXX", "desc", "UIUC","Instructor Q"]],
+    "Spring 2017":[], "Fall 2017":[], "Spring 2018":[],"All":[]};
+
+
+schoolTermsList.forEach( function ( t) {
+    client.sadd("ClassTranscribe::Terms", "ClassTranscribe::Terms::"+t);
+    courseList[t].forEach(function (course) {
+        // Add  course
         //console.log(course);
-        var classid=course[4];
-       client.sadd("ClassTranscribe::Terms::"+e, "ClassTranscribe::Terms::"+e+"::"+classid);
-       // Add Course Info
-        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "ClassNumber", course[0]);
-        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "ClassName", course[2]);
-        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "Instructor", course[3]);
-        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "ClassDesc", "To be added");
+        var classid=getClassUid(university=course[5], term=t, number=course[1], section=course[2]);
+
+        //General Information update
+        client.sadd("ClassTranscribe::CourseList", "ClassTranscribe::Course::"+classid); // add class to class list
+        client.sadd("ClassTranscribe::Terms::"+t, "ClassTranscribe::Course::"+classid); // add class to term list
+        client.sadd("ClassTranscribe::SubjectList", "ClassTranscribe::Subject::"+course[0]); // add class subject to subject list
+        client.sadd("ClassTranscribe::Subject::"+course[0], "ClassTranscribe::Course::"+classid); // add class to the subject
+
+
+        // Add Course Info
+        client.hset("ClassTranscribe::Course::"+classid, "Subject", course[0]);
+        client.hset("ClassTranscribe::Course::"+classid, "ClassNumber", course[1]);
+        client.hset("ClassTranscribe::Course::"+classid, "SectionNumber", course[2]);
+        client.hset("ClassTranscribe::Course::"+classid, "ClassName", course[3]);
+        client.hset("ClassTranscribe::Course::"+classid, "ClassDesc", course[4]);
+        client.hset("ClassTranscribe::Course::"+classid, "University", course[6]);
+        client.hset("ClassTranscribe::Course::"+classid, "Instructor", course[6]);
     });
 });
 
 
 //--------testing--------------------
-client.hgetall("ClassTranscribe::Terms::Fall 2016::4", function (err, reply){
-    console.log(typeof (reply));
-    console.log(reply);
-});
-
-client.smembers("ClassTranscribe::Terms", function (err, reply){
-    console.log(typeof (reply));
-    console.log(reply);
-});
+//client.hgetall("ClassTranscribe::Terms::Fall 2016::4", function (err, reply){
+//    console.log(typeof (reply));
+//    console.log(reply);
+//});
+//
+//client.smembers("ClassTranscribe::Terms", function (err, reply){
+//    console.log(typeof (reply));
+//    console.log(reply);
+//});
 
 console.log("Sample Data Loaded");
 //======================End of sample data==========================================================
@@ -122,24 +135,24 @@ console.log("Sample Data Loaded");
 var mustachePath = 'templates/';
 
 var exampleTerms = {
-  "cs241": "printf",
-  "cs225": "pointer",
-  "cs225-sp16": "pointer",
-  "chem233-sp16": 'spectroscopy',
-  "adv582": "focus group",
-  "ece210": "Energy Signals",
-  "cs446-fa16": "Decision Trees"
+    "cs241": "printf",
+    "cs225": "pointer",
+    "cs225-sp16": "pointer",
+    "chem233-sp16": 'spectroscopy',
+    "adv582": "focus group",
+    "ece210": "Energy Signals",
+    "cs446-fa16": "Decision Trees"
 }
 
 
 var homeMustache = fs.readFileSync(mustachePath + 'home.mustache').toString();
 app.get('/', function (request, response) {
-  response.writeHead(200, {
-    'Content-Type': 'text/html'
-  });
+    response.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
 
-  var html = Mustache.render(homeMustache);
-  response.end(html);
+    var html = Mustache.render(homeMustache);
+    response.end(html);
 });
 
 //----------------Management Page Section-------------------------------------------
@@ -147,9 +160,9 @@ app.get('/', function (request, response) {
 var allterms = [];
 var managementMustache = fs.readFileSync(mustachePath + 'management.mustache').toString();
 app.get('/manage-classes', function (request, response) {
-  response.writeHead(200, {
-    'Content-Type': 'text/html'
-  });
+    response.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
     // get all terms data from the database
     client.smembers("ClassTranscribe::Terms", function(err, reply) {
         // reply is null when the key is missing
@@ -167,26 +180,28 @@ app.get('/manage-classes', function (request, response) {
     });
 });
 
-
+// TODO: Security check, and university info should come from session not submitted
 // Add new class
 app.post('/manage-classes/newclass', function (request, response) {
-    //response.render(servervar1: testvar1);
-    //response.send(testvar1);
-    console.log("new class added");
+    console.log("new class to be added, start processing...");
     var term = "ClassTranscribe::Terms::"+request.body.Term;
-    client.get("ucid", function (err, reply) {
-        var ucid = reply;
-        // update the next avaliable unique class id
-        client.incr("ucid");
-        var classkey = term+"::"+ucid;
-        // add class
-        client.hset(classkey, "ClassNumber", request.body["ClassNumber"]);
-        client.hset(classkey, "ClassName", request.body["ClassName"]);
-        client.hset(classkey, "Instructor", request.body["Instructor"]);
-        client.hset(classkey, "ClassDesc", "To be added");
-        client.sadd(term, classkey);
-        response.end();
-    });
+    var classid = getClassUid(university=request.body["University"], term=request.body["Term"], number=request.body["University"], section="");
+    // add class
+    client.sadd("ClassTranscribe::CourseList", "ClassTranscribe::Course::"+classid); // add class to class list
+    client.sadd("ClassTranscribe::Terms::"+t, "ClassTranscribe::Course::"+classid); // add class to term list
+    client.sadd("ClassTranscribe::SubjectList", "ClassTranscribe::Subject::"+course[0]); // add class subject to subject list
+    client.sadd("ClassTranscribe::Subject::"+course[0], "ClassTranscribe::Course::"+classid); // add class to the subject
+
+
+    // Add Course Info
+    client.hset("ClassTranscribe::Course::"+classid, "Subject", course[0]);
+    client.hset("ClassTranscribe::Course::"+classid, "ClassNumber", course[1]);
+    client.hset("ClassTranscribe::Course::"+classid, "SectionNumber", course[2]);
+    client.hset("ClassTranscribe::Course::"+classid, "ClassName", course[3]);
+    client.hset("ClassTranscribe::Course::"+classid, "ClassDesc", course[4]);
+    client.hset("ClassTranscribe::Course::"+classid, "University", course[6]);
+    client.hset("ClassTranscribe::Course::"+classid, "Instructor", course[6]);
+    response.end();
 //    console.log(request.body);
 });
 
@@ -221,15 +236,21 @@ app.post('/manage-classes/newclass', function (request, response) {
 app.get('/manage-classes/getterminfo', function (request, response) {
     console.log("term change noted");
     console.log(request.query["term"]);
-    var term = "ClassTranscribe::Terms::"+request.query["term"];
+    if(request.query["term"]=="All"){
+        var term = "ClassTranscribe::CourseList";
+    }
+    else {
+        var term = "ClassTranscribe::Terms::" + request.query["term"];
+    }
     client.smembers(term, function (err, reply) {
         var commands = [];
         reply.forEach(function (c){
-          // query every class to get info for display
+            // query every class to get info for display
             commands.push(["hgetall", c]);
         });
         console.log("getterminfo command:"+commands);
         client.multi(commands).exec(function (err, replies) {
+            console.log("getterminfo final replies:"+replies);
             response.send(replies);
         });
     });
@@ -247,365 +268,365 @@ app.get('/manage-classes/getterminfo', function (request, response) {
 
 var viewerMustache = fs.readFileSync(mustachePath + 'viewer.mustache').toString();
 app.get('/viewer/:className', function (request, response) {
-  var className = request.params.className.toLowerCase();
+    var className = request.params.className.toLowerCase();
 
-  response.writeHead(200, {
-    'Content-Type': 'text/html',
-    "Access-Control-Allow-Origin" : "*",
-    "Access-Control-Allow-Methods" : "POST, GET, PUT, DELETE, OPTIONS"
-  });
+    response.writeHead(200, {
+        'Content-Type': 'text/html',
+        "Access-Control-Allow-Origin" : "*",
+        "Access-Control-Allow-Methods" : "POST, GET, PUT, DELETE, OPTIONS"
+    });
 
-  var view = {
-    className: className,
-  };
-  var html = Mustache.render(viewerMustache, view);
-  response.end(html);
+    var view = {
+        className: className,
+    };
+    var html = Mustache.render(viewerMustache, view);
+    response.end(html);
 });
 
 var searchMustache = fs.readFileSync(mustachePath + 'search.mustache').toString();
 app.get('/:className', function (request, response) {
-  var className = request.params.className.toLowerCase();
+    var className = request.params.className.toLowerCase();
 
-  response.writeHead(200, {
-    'Content-Type': 'text/html'
-  });
+    response.writeHead(200, {
+        'Content-Type': 'text/html'
+    });
 
-  var view = {
-    className: className,
-    exampleTerm: exampleTerms[className]
-  };
-  var html = Mustache.render(searchMustache, view);
-  response.end(html);
+    var view = {
+        className: className,
+        exampleTerm: exampleTerms[className]
+    };
+    var html = Mustache.render(searchMustache, view);
+    response.end(html);
 });
 
 var progressDashboardMustache = fs.readFileSync(mustachePath + 'progressDashboard.mustache').toString();
 app.get('/viewProgress/:className/:uuid', function (request, response) {
-  var className = request.params.className;
-  var uuid = request.params.uuid;
+    var className = request.params.className;
+    var uuid = request.params.uuid;
 
-  var isMemberArgs = ['ClassTranscribe::AllowedUploaders', uuid]
-  client.sismember(isMemberArgs, function (err, result) {
-    if (result) {
-      progressDict = {}
-      client.smembers("ClassTranscribe::First::" + className, function (err, firstMembers) {
-        if (err) {
-          console.log(err);
+    var isMemberArgs = ['ClassTranscribe::AllowedUploaders', uuid]
+    client.sismember(isMemberArgs, function (err, result) {
+        if (result) {
+            progressDict = {}
+            client.smembers("ClassTranscribe::First::" + className, function (err, firstMembers) {
+                if (err) {
+                    console.log(err);
+                }
+
+                client.smembers("ClassTranscribe::Finished::" + className, function (err, finishedMembers) {
+                    if (err) {
+                        console.log(err);
+                    }
+
+                    firstMembers.forEach(function (member) {
+                        var netID = member.split("-")[1].replace(".json", "").replace(".txt", "");
+                        if (progressDict.hasOwnProperty(netID)) {
+                            progressDict[netID] = progressDict[netID] + 1;
+                        } else {
+                            progressDict[netID] = 1;
+                        }
+                    });
+
+                    finishedMembers.forEach(function (member) {
+                        var netID = member.split("-")[1].replace(".json", "").replace(".txt", "");
+                        if (progressDict.hasOwnProperty(netID)) {
+                            progressDict[netID] = progressDict[netID] + 1;
+                        } else {
+                            progressDict[netID] = 1;
+                        }
+                    });
+
+                    var studentProgress = []
+                    for (netID in progressDict) {
+                        if (progressDict.hasOwnProperty(netID) && netID !== 'omelvin2') {
+                            studentProgress.push({'netID': netID, 'count': progressDict[netID]});
+                        }
+                    }
+
+                    response.writeHead(200, {
+                        'Content-Type': 'text/html'
+                    });
+
+                    var view = {
+                        className: className,
+                        studentProgress: studentProgress
+                    };
+                    var html = Mustache.render(progressDashboardMustache, view);
+                    response.end(html);
+                });
+            });
         }
-
-        client.smembers("ClassTranscribe::Finished::" + className, function (err, finishedMembers) {
-          if (err) {
-            console.log(err);
-          }
-
-          firstMembers.forEach(function (member) {
-            var netID = member.split("-")[1].replace(".json", "").replace(".txt", "");
-            if (progressDict.hasOwnProperty(netID)) {
-              progressDict[netID] = progressDict[netID] + 1;
-            } else {
-              progressDict[netID] = 1;
-            }
-          });
-
-          finishedMembers.forEach(function (member) {
-            var netID = member.split("-")[1].replace(".json", "").replace(".txt", "");
-            if (progressDict.hasOwnProperty(netID)) {
-              progressDict[netID] = progressDict[netID] + 1;
-            } else {
-              progressDict[netID] = 1;
-            }
-          });
-
-          var studentProgress = []
-          for (netID in progressDict) {
-            if (progressDict.hasOwnProperty(netID) && netID !== 'omelvin2') {
-              studentProgress.push({'netID': netID, 'count': progressDict[netID]});
-            }
-          }
-
-          response.writeHead(200, {
-            'Content-Type': 'text/html'
-          });
-
-          var view = {
-            className: className,
-            studentProgress: studentProgress
-          };
-          var html = Mustache.render(progressDashboardMustache, view);
-          response.end(html);
-        });
-      });
-    }
-  })
+    })
 });
 
 app.post('/download', function(request, response) {
-  var transcriptions = JSON.parse(request.body.transcriptions);
-  var fileNumber = Math.round(Math.random() * 10000)
-  fs.writeFileSync("public/Downloads/" + fileNumber + ".webvtt", webvtt(transcriptions));
-  response.writeHead(200, {
-    'Content-Type': 'application/json'
-  });
-  response.end(JSON.stringify({fileNumber: fileNumber}));
+    var transcriptions = JSON.parse(request.body.transcriptions);
+    var fileNumber = Math.round(Math.random() * 10000)
+    fs.writeFileSync("public/Downloads/" + fileNumber + ".webvtt", webvtt(transcriptions));
+    response.writeHead(200, {
+        'Content-Type': 'application/json'
+    });
+    response.end(JSON.stringify({fileNumber: fileNumber}));
 });
 
 app.get('/download/webvtt/:fileNumber', function (request, reponse) {
-  var file = "public/Downloads/" + request.params.fileNumber + ".webvtt";
+    var file = "public/Downloads/" + request.params.fileNumber + ".webvtt";
 
-  var filename = path.basename(file);
-  var mimetype = mime.lookup(file);
+    var filename = path.basename(file);
+    var mimetype = mime.lookup(file);
 
-  reponse.setHeader('Content-disposition', 'attachment; filename=' + filename);
-  reponse.setHeader('Content-type', mimetype);
+    reponse.setHeader('Content-disposition', 'attachment; filename=' + filename);
+    reponse.setHeader('Content-type', mimetype);
 
-  var filestream = fs.createReadStream(file);
-  filestream.pipe(reponse);
+    var filestream = fs.createReadStream(file);
+    filestream.pipe(reponse);
 });
 
 var firstPassMustache = fs.readFileSync(mustachePath + 'index.mustache').toString();
 app.get('/first/:className/:id', function (request, response) {
-  var className = request.params.className.toUpperCase();
-  response.writeHead(200, {
-    'Content-Type': 'text/html',
-    "Access-Control-Allow-Origin" : "*",
-    "Access-Control-Allow-Methods" : "POST, GET, PUT, DELETE, OPTIONS"
-  });
+    var className = request.params.className.toUpperCase();
+    response.writeHead(200, {
+        'Content-Type': 'text/html',
+        "Access-Control-Allow-Origin" : "*",
+        "Access-Control-Allow-Methods" : "POST, GET, PUT, DELETE, OPTIONS"
+    });
 
-  var view = {
-    className: className,
-    taskName: request.query.task,
-  };
-  var html = Mustache.render(firstPassMustache, view);
-  response.end(html);
+    var view = {
+        className: className,
+        taskName: request.query.task,
+    };
+    var html = Mustache.render(firstPassMustache, view);
+    response.end(html);
 });
 
 app.get('/Video/:fileName', function (request, response) {
-  var file = path.resolve(__dirname + "/Video/", request.params.fileName + ".mp4");
-  var range = request.headers.range;
-  var positions = range.replace(/bytes=/, "").split("-");
-  var start = parseInt(positions[0], 10);
+    var file = path.resolve(__dirname + "/Video/", request.params.fileName + ".mp4");
+    var range = request.headers.range;
+    var positions = range.replace(/bytes=/, "").split("-");
+    var start = parseInt(positions[0], 10);
 
-  fs.stat(file, function(err, stats) {
-    var total = stats.size;
-    var end = positions[1] ? parseInt(positions[1], 10) : total - 1;
-    var chunksize = (end - start) + 1;
+    fs.stat(file, function(err, stats) {
+        var total = stats.size;
+        var end = positions[1] ? parseInt(positions[1], 10) : total - 1;
+        var chunksize = (end - start) + 1;
 
-    response.writeHead(206, {
-      "Content-Range": "bytes " + start + "-" + end + "/" + total,
-      "Accept-Ranges": "bytes",
-      "Content-Length": chunksize,
-      "Content-Type": "video/mp4"
+        response.writeHead(206, {
+            "Content-Range": "bytes " + start + "-" + end + "/" + total,
+            "Accept-Ranges": "bytes",
+            "Content-Length": chunksize,
+            "Content-Type": "video/mp4"
+        });
+
+        var stream = fs.createReadStream(file, { start: start, end: end })
+            .on("open", function() {
+                stream.pipe(response);
+            }).on("error", function(err) {
+                response.end(err);
+            });
     });
-
-    var stream = fs.createReadStream(file, { start: start, end: end })
-      .on("open", function() {
-        stream.pipe(response);
-      }).on("error", function(err) {
-        response.end(err);
-      });
-  });
 })
 
 app.post('/first', function (request, response) {
-  var stats = JSON.parse(request.body.stats);
-  var transcriptions = request.body.transcriptions;//
-  var className = request.body.className.toUpperCase();//
-  var statsFileName = stats.video.replace(/\ /g,"_") + "-" + stats.name + ".json";
-  var captionFileName = stats.video.replace(/\ /g,"_") + "-" + stats.name + ".txt";
-  var taskName = stats.video.replace(/\ /g,"_");
-  mkdirp("captions/first/" + className, function (err) {
-    if (err) {
-      console.log(err);
-    }
-    transcriptionPath = "captions/first/" + className + "/" + captionFileName;
-    client.sadd("ClassTranscribe::Transcriptions::" + transcriptionPath, transcriptions);
-    fs.writeFileSync(transcriptionPath, transcriptions, {mode: 0777});
-  });
-
-  mkdirp("stats/first/" + className, function (err) {
-    if (err) {
-      console.log(err);
-    }
-    statsPath = "stats/first/" + className + "/" + statsFileName;
-    client.sadd("ClassTranscribe::Stats::" + statsPath, request.body.stats);
-    fs.writeFileSync(statsPath, request.body.stats, {mode: 0777});
-
-
-    var isTranscriptionValid = validator.validateTranscription("stats/first/" + className + "/" + statsFileName)
-
-    if (isTranscriptionValid) {
-      console.log("Transcription is good!");
-      client.zincrby("ClassTranscribe::Submitted::" + className, 1, taskName);
-      client.zscore("ClassTranscribe::Submitted::" + className, taskName, function(err, score) {
-        score = parseInt(score, 10);
+    var stats = JSON.parse(request.body.stats);
+    var transcriptions = request.body.transcriptions;//
+    var className = request.body.className.toUpperCase();//
+    var statsFileName = stats.video.replace(/\ /g,"_") + "-" + stats.name + ".json";
+    var captionFileName = stats.video.replace(/\ /g,"_") + "-" + stats.name + ".txt";
+    var taskName = stats.video.replace(/\ /g,"_");
+    mkdirp("captions/first/" + className, function (err) {
         if (err) {
-          return err;
+            console.log(err);
         }
+        transcriptionPath = "captions/first/" + className + "/" + captionFileName;
+        client.sadd("ClassTranscribe::Transcriptions::" + transcriptionPath, transcriptions);
+        fs.writeFileSync(transcriptionPath, transcriptions, {mode: 0777});
+    });
 
-        if (score === 10) {
-          client.zrem("ClassTranscribe::Submitted::" + className, taskName);
-          client.zrem("ClassTranscribe::PrioritizedTasks::" + className, taskName);
+    mkdirp("stats/first/" + className, function (err) {
+        if (err) {
+            console.log(err);
         }
+        statsPath = "stats/first/" + className + "/" + statsFileName;
+        client.sadd("ClassTranscribe::Stats::" + statsPath, request.body.stats);
+        fs.writeFileSync(statsPath, request.body.stats, {mode: 0777});
 
-        client.sadd("ClassTranscribe::First::" + className, captionFileName);
-        var netIDTaskTuple = stats.name + ":" + taskName;
-        console.log('tuple delete: ' + netIDTaskTuple);
-        client.hdel("ClassTranscribe::ActiveTranscribers::" + className, netIDTaskTuple);
-        sendProgressEmail(className, stats.name);
-      });
-    } else {
-      console.log("Transcription is bad!");
-      client.lpush("ClassTranscribe::Failed::" + className, captionFileName);
-      return;
-    }
-  });
+
+        var isTranscriptionValid = validator.validateTranscription("stats/first/" + className + "/" + statsFileName)
+
+        if (isTranscriptionValid) {
+            console.log("Transcription is good!");
+            client.zincrby("ClassTranscribe::Submitted::" + className, 1, taskName);
+            client.zscore("ClassTranscribe::Submitted::" + className, taskName, function(err, score) {
+                score = parseInt(score, 10);
+                if (err) {
+                    return err;
+                }
+
+                if (score === 10) {
+                    client.zrem("ClassTranscribe::Submitted::" + className, taskName);
+                    client.zrem("ClassTranscribe::PrioritizedTasks::" + className, taskName);
+                }
+
+                client.sadd("ClassTranscribe::First::" + className, captionFileName);
+                var netIDTaskTuple = stats.name + ":" + taskName;
+                console.log('tuple delete: ' + netIDTaskTuple);
+                client.hdel("ClassTranscribe::ActiveTranscribers::" + className, netIDTaskTuple);
+                sendProgressEmail(className, stats.name);
+            });
+        } else {
+            console.log("Transcription is bad!");
+            client.lpush("ClassTranscribe::Failed::" + className, captionFileName);
+            return;
+        }
+    });
 });
 
 var secondPassMustache = fs.readFileSync(mustachePath + 'editor.mustache').toString();
 app.get('/second/:className/:id', function (request, response) {
-  var className = request.params.className.toUpperCase();
-  response.writeHead(200, {
-    'Content-Type': 'text/html',
-    "Access-Control-Allow-Origin" : "*",
-    "Access-Control-Allow-Methods" : "POST, GET, PUT, DELETE, OPTIONS"
-  });
+    var className = request.params.className.toUpperCase();
+    response.writeHead(200, {
+        'Content-Type': 'text/html',
+        "Access-Control-Allow-Origin" : "*",
+        "Access-Control-Allow-Methods" : "POST, GET, PUT, DELETE, OPTIONS"
+    });
 
-  var view = {
-    className: className,
-    taskName: request.query.task,
-  };
-  var html = Mustache.render(secondPassMustache, view);
-  response.end(html);
+    var view = {
+        className: className,
+        taskName: request.query.task,
+    };
+    var html = Mustache.render(secondPassMustache, view);
+    response.end(html);
 });
 
 var queueMustache = fs.readFileSync(mustachePath + 'queue.mustache').toString();
 app.get('/queue/:className', function (request, response) {
-  var className = request.params.className.toUpperCase();
+    var className = request.params.className.toUpperCase();
 
-  var view = {
-    className: className
-  };
+    var view = {
+        className: className
+    };
 
-  var html = Mustache.render(queueMustache, view);
-  response.end(html);
+    var html = Mustache.render(queueMustache, view);
+    response.end(html);
 });
 
 app.get('/queue/:className/:netId', function (request, response) {
-  var className = request.params.className.toUpperCase();
-  var netId = request.params.netId.toLowerCase();
-  
-  var args = ["ClassTranscribe::Tasks::" + className, "0", "99999", "LIMIT", "0", "1"];
-  client.zrangebyscore(args, function (err, result) {
-    if (err) {
-      throw err;
-    }
+    var className = request.params.className.toUpperCase();
+    var netId = request.params.netId.toLowerCase();
 
-    if (!result.length) {
-      return response.end("No more tasks at the moment. More tasks are being uploaded as you read this. Please check back later.");
-    }
+    var args = ["ClassTranscribe::Tasks::" + className, "0", "99999", "LIMIT", "0", "1"];
+    client.zrangebyscore(args, function (err, result) {
+        if (err) {
+            throw err;
+        }
 
-    var taskName = result[0];
-    // var fileName = chosenTask + "-" + netId + ".txt";
+        if (!result.length) {
+            return response.end("No more tasks at the moment. More tasks are being uploaded as you read this. Please check back later.");
+        }
 
-    args = ["ClassTranscribe::Tasks::" + className, "1", result[0]];
-    client.zincrby(args);
+        var taskName = result[0];
+        // var fileName = chosenTask + "-" + netId + ".txt";
 
-    response.end(taskName);
-  });
+        args = ["ClassTranscribe::Tasks::" + className, "1", result[0]];
+        client.zincrby(args);
+
+        response.end(taskName);
+    });
 });
 
 function highDensityQueue(response, className, netId, attemptNum) {
-  var args = ["ClassTranscribe::Tasks::" + className, "0", "99999", "WITHSCORES", "LIMIT", "0", "1"];
-  client.zrangebyscore(args, function (err, result) {
-    if (err) {
-      throw err;
-    }
-
-    // Tasks will only be empty if there are no tasks left or they've moved to PrioritizedTasks
-    if (!result.length) {
-      var args = ["ClassTranscribe::PrioritizedTasks::" + className, "0", "99999",
-        "WITHSCORES", "LIMIT", "0", "1"];
-      client.zrangebyscore(args, function (err, result) {
-        if (!result.length) {
-          response.end("No more tasks at the moment. Please email classtranscribe@gmail.com.");
-        } else {
-          taskName = result[0];
-          taskScore = parseInt(result[1], 10);
-
-          queueResponse(response, "PrioritizedTasks", netId, className, taskName, attemptNum);
+    var args = ["ClassTranscribe::Tasks::" + className, "0", "99999", "WITHSCORES", "LIMIT", "0", "1"];
+    client.zrangebyscore(args, function (err, result) {
+        if (err) {
+            throw err;
         }
-      });
-    } else {
-      var taskName = result[0];
-      var taskScore = parseInt(result[1], 10);
 
-      if(taskScore >= 2) {
-        initPrioritizedTask(response, className, attemptNum);
-      } else {
-        queueResponse(response, "Tasks", netId, className, taskName, attemptNum);
-      }
-    }
-  });
+        // Tasks will only be empty if there are no tasks left or they've moved to PrioritizedTasks
+        if (!result.length) {
+            var args = ["ClassTranscribe::PrioritizedTasks::" + className, "0", "99999",
+                "WITHSCORES", "LIMIT", "0", "1"];
+            client.zrangebyscore(args, function (err, result) {
+                if (!result.length) {
+                    response.end("No more tasks at the moment. Please email classtranscribe@gmail.com.");
+                } else {
+                    taskName = result[0];
+                    taskScore = parseInt(result[1], 10);
+
+                    queueResponse(response, "PrioritizedTasks", netId, className, taskName, attemptNum);
+                }
+            });
+        } else {
+            var taskName = result[0];
+            var taskScore = parseInt(result[1], 10);
+
+            if(taskScore >= 2) {
+                initPrioritizedTask(response, className, attemptNum);
+            } else {
+                queueResponse(response, "Tasks", netId, className, taskName, attemptNum);
+            }
+        }
+    });
 }
 
 function initPrioritizedTask(response, className, netId, attemptNum) {
-  var numTasksToPrioritize = 10;
-  // Can't call zcard if doesn't exist. Unable to be directly handled by err in zcard call
-  // due to how the redis client works
-  client.exists("ClassTranscribe::PrioritizedTasks::" + className, function (err, code) {
-    if (err) {
-      throw err;
-    }
-
-    if (code === 0) {
-      moveToPrioritizedQueue(response, className, netId, 0, numTasksToPrioritize, attemptNum);
-    } else {
-      client.zcard("ClassTranscribe::PrioritizedTasks::" + className, function (err, numberTasks) {
+    var numTasksToPrioritize = 10;
+    // Can't call zcard if doesn't exist. Unable to be directly handled by err in zcard call
+    // due to how the redis client works
+    client.exists("ClassTranscribe::PrioritizedTasks::" + className, function (err, code) {
         if (err) {
-          throw err;
+            throw err;
         }
 
-        moveToPrioritizedQueue(response, className, netId, numberTasks, numTasksToPrioritize, attemptNum);
-      });
-    }
-  });
+        if (code === 0) {
+            moveToPrioritizedQueue(response, className, netId, 0, numTasksToPrioritize, attemptNum);
+        } else {
+            client.zcard("ClassTranscribe::PrioritizedTasks::" + className, function (err, numberTasks) {
+                if (err) {
+                    throw err;
+                }
+
+                moveToPrioritizedQueue(response, className, netId, numberTasks, numTasksToPrioritize, attemptNum);
+            });
+        }
+    });
 }
 
 function queueResponse(response, queueName, netId, className, chosenTask, attemptNum) {
-  console.log(chosenTask);
+    console.log(chosenTask);
 
-  if (attemptNum === 10) {
-    response.end('It looks like you have already completed the available tasks.\n' +
-      'If you believe this is incorrect please contact classtranscribe@gmail.com')
-    return;
-  }
-
-  var incrArgs = ["ClassTranscribe::" + queueName + "::" + className, "1", chosenTask];
-  client.zincrby(incrArgs);
-
-  var netIDTaskTuple = netId + ":" + chosenTask;
-  console.log('tuple ' + netIDTaskTuple);
-  var date = new Date();
-  var dateString = date.getTime();
-  var hsetArgs = ["ClassTranscribe::ActiveTranscribers::" + className, netIDTaskTuple, dateString];
-  client.hset(hsetArgs);
-
-  var fileName = chosenTask + "-" + netId + ".txt";
-  var isMemberArgs = ["ClassTranscribe::First::" + className, fileName]
-  client.sismember(isMemberArgs, function (err, result) {
-    if (result) {
-      highDensityQueue(response, className, netId, attemptNum + 1);
-    } else {
-      // If not in First it may be in Finished
-      isMemberArgs = ["ClassTranscribe::Finished::" + className, fileName]
-      client.sismember(isMemberArgs, function (err, result) {
-          if (result) {
-            highDensityQueue(response, className, netId, attemptNum + 1);
-          } else {
-            response.end(chosenTask);
-          }
-      });
+    if (attemptNum === 10) {
+        response.end('It looks like you have already completed the available tasks.\n' +
+            'If you believe this is incorrect please contact classtranscribe@gmail.com')
+        return;
     }
-  });
+
+    var incrArgs = ["ClassTranscribe::" + queueName + "::" + className, "1", chosenTask];
+    client.zincrby(incrArgs);
+
+    var netIDTaskTuple = netId + ":" + chosenTask;
+    console.log('tuple ' + netIDTaskTuple);
+    var date = new Date();
+    var dateString = date.getTime();
+    var hsetArgs = ["ClassTranscribe::ActiveTranscribers::" + className, netIDTaskTuple, dateString];
+    client.hset(hsetArgs);
+
+    var fileName = chosenTask + "-" + netId + ".txt";
+    var isMemberArgs = ["ClassTranscribe::First::" + className, fileName]
+    client.sismember(isMemberArgs, function (err, result) {
+        if (result) {
+            highDensityQueue(response, className, netId, attemptNum + 1);
+        } else {
+            // If not in First it may be in Finished
+            isMemberArgs = ["ClassTranscribe::Finished::" + className, fileName]
+            client.sismember(isMemberArgs, function (err, result) {
+                if (result) {
+                    highDensityQueue(response, className, netId, attemptNum + 1);
+                } else {
+                    response.end(chosenTask);
+                }
+            });
+        }
+    });
 }
 
 /**
@@ -617,171 +638,171 @@ function queueResponse(response, queueName, netId, className, chosenTask, attemp
  * @return {string} task to be completed
  */
 function moveToPrioritizedQueue(response, className, netId, numberTasks, numTasksToPrioritize, attemptNum) {
-  if (numberTasks < numTasksToPrioritize) {
-      var numDifference = numTasksToPrioritize - numberTasks;
-      var args = ["ClassTranscribe::Tasks::" + className, "0", "99999",
-        "WITHSCORES", "LIMIT", "0", numDifference];
-      client.zrangebyscore(args, function (err, tasks) {
-        if (err) {
-          throw err;
-        }
+    if (numberTasks < numTasksToPrioritize) {
+        var numDifference = numTasksToPrioritize - numberTasks;
+        var args = ["ClassTranscribe::Tasks::" + className, "0", "99999",
+            "WITHSCORES", "LIMIT", "0", numDifference];
+        client.zrangebyscore(args, function (err, tasks) {
+            if (err) {
+                throw err;
+            }
 
-        for(var i = 0; i < tasks.length; i += 2) {
-          var taskName = tasks[i];
-          var score = parseInt(tasks[i + 1], 10);
-          client.zrem("ClassTranscribe::Tasks::" + className, taskName);
-          client.zadd("ClassTranscribe::PrioritizedTasks::" + className, score, taskName);
-        }
-        getPrioritizedTask(response, className, netId, attemptNum);
-      });
+            for(var i = 0; i < tasks.length; i += 2) {
+                var taskName = tasks[i];
+                var score = parseInt(tasks[i + 1], 10);
+                client.zrem("ClassTranscribe::Tasks::" + className, taskName);
+                client.zadd("ClassTranscribe::PrioritizedTasks::" + className, score, taskName);
+            }
+            getPrioritizedTask(response, className, netId, attemptNum);
+        });
     } else {
-      getPrioritizedTask(response, className, netId, attemptNum);
+        getPrioritizedTask(response, className, netId, attemptNum);
     }
 }
 
 function getPrioritizedTask(response, className, netId, attemptNum) {
-  var args = ["ClassTranscribe::PrioritizedTasks::" + className, "0", "99999", "LIMIT", "0", "1"];
-  client.zrangebyscore(args, function(err, tasks) {
-    if (err) {
-      throw err;
-    }
-    var task = tasks[0]
-    console.log('tasks from priority ' + task);
-    queueResponse(response, "PrioritizedTasks", netId, className, task, attemptNum);
-  });
+    var args = ["ClassTranscribe::PrioritizedTasks::" + className, "0", "99999", "LIMIT", "0", "1"];
+    client.zrangebyscore(args, function(err, tasks) {
+        if (err) {
+            throw err;
+        }
+        var task = tasks[0]
+        console.log('tasks from priority ' + task);
+        queueResponse(response, "PrioritizedTasks", netId, className, task, attemptNum);
+    });
 }
 
 function clearInactiveTranscriptions() {
-  var classesToClear = ["CS241-SP16", "CHEM233-SP16", "CS225-SP16"];
-  var curDate = new Date();
+    var classesToClear = ["CS241-SP16", "CHEM233-SP16", "CS225-SP16"];
+    var curDate = new Date();
 
-  classesToClear.forEach(function (className) {
-    client.hgetall("ClassTranscribe::ActiveTranscribers::" + className, function (err, result) {
-      if (err) {
-        console.log(err);
-        return;
-      }
+    classesToClear.forEach(function (className) {
+        client.hgetall("ClassTranscribe::ActiveTranscribers::" + className, function (err, result) {
+            if (err) {
+                console.log(err);
+                return;
+            }
 
-      if (result !== null) {
-        for(var i = 0; i < result.length; i += 2) {
-          var netIDTaskTuple = result[i].split(":");
-          var netId = netIDTaskTuple[0];
-          var taskName = netIDTaskTuple[1];
-          var startDate = new Date(result[i + 1]);
+            if (result !== null) {
+                for(var i = 0; i < result.length; i += 2) {
+                    var netIDTaskTuple = result[i].split(":");
+                    var netId = netIDTaskTuple[0];
+                    var taskName = netIDTaskTuple[1];
+                    var startDate = new Date(result[i + 1]);
 
-          var timeDiff = Math.abs(curDate.getTime() - startDate.getTime());
-          var diffHours = Math.ceil(timeDiff / (1000 * 3600));
+                    var timeDiff = Math.abs(curDate.getTime() - startDate.getTime());
+                    var diffHours = Math.ceil(timeDiff / (1000 * 3600));
 
-          if (diffHours >= 2) {
-            client.hdel("ClassTranscribe::ActiveTranscribers::" + className, result[i]);
-            // dont' know which queue task is currently in
-            var taskArgs = ["ClassTranscribe::Tasks::" + className, taskName];
-            client.zscore(taskArgs, function (err, result) {
-              if (err) {
-                throw err;
-              } else if (result !== null) {
-                client.zincrby("ClassTranscribe::Tasks::" + className, -1, taskName);
-              }
-            })
+                    if (diffHours >= 2) {
+                        client.hdel("ClassTranscribe::ActiveTranscribers::" + className, result[i]);
+                        // dont' know which queue task is currently in
+                        var taskArgs = ["ClassTranscribe::Tasks::" + className, taskName];
+                        client.zscore(taskArgs, function (err, result) {
+                            if (err) {
+                                throw err;
+                            } else if (result !== null) {
+                                client.zincrby("ClassTranscribe::Tasks::" + className, -1, taskName);
+                            }
+                        })
 
-            var priorityArgs = ["ClassTranscribe::PrioritizedTasks::" + className, taskName];
-            client.zscore(priorityArgs, function (err, result) {
-              if (err) {
-                throw err;
-              } else if (result !== null) {
-                client.zincrby("ClassTranscribe::Tasks::" + className, -1, taskName);
-              }
-            })
-          }
-        }
-      }
-    })
-  });
+                        var priorityArgs = ["ClassTranscribe::PrioritizedTasks::" + className, taskName];
+                        client.zscore(priorityArgs, function (err, result) {
+                            if (err) {
+                                throw err;
+                            } else if (result !== null) {
+                                client.zincrby("ClassTranscribe::Tasks::" + className, -1, taskName);
+                            }
+                        })
+                    }
+                }
+            }
+        })
+    });
 
 }
 
 var captionsMapping = {
-  //"cs241": require('./public/javascripts/data/captions/cs241.js'),
-  //"cs225": require('./public/javascripts/data/captions/cs225.js'),
-  //"cs225-sp16": require('./public/javascripts/data/captions/cs225-sp16.js'),
-  //"chem233-sp16": require('./public/javascripts/data/captions/chem233-sp16.js'),
-  //"adv582": require('./public/javascripts/data/captions/adv582.js'),
-  //"ece210": require('./public/javascripts/data/captions/ece210.js'),
-  //"cs446-fa16": require('./public/javascripts/data/captions/cs446-fa16.js'),
+    //"cs241": require('./public/javascripts/data/captions/cs241.js'),
+    //"cs225": require('./public/javascripts/data/captions/cs225.js'),
+    //"cs225-sp16": require('./public/javascripts/data/captions/cs225-sp16.js'),
+    //"chem233-sp16": require('./public/javascripts/data/captions/chem233-sp16.js'),
+    //"adv582": require('./public/javascripts/data/captions/adv582.js'),
+    //"ece210": require('./public/javascripts/data/captions/ece210.js'),
+    //"cs446-fa16": require('./public/javascripts/data/captions/cs446-fa16.js'),
 
-  "cs241": require('./public/javascripts/data/captions/cs241.js'),
-  "cs225": require('./public/javascripts/data/captions/cs225.js'),
-  "cs225-sp16": require('./public/javascripts/data/captions/cs225-sp16.js'),
-  "chem233-sp16": require('./public/javascripts/data/captions/chem233-sp16.js'),
-  "adv582": require('./public/javascripts/data/captions/adv582.js'),
-  "ece210": require('./public/javascripts/data/captions/ece210.js'),
-  "cs446-fa16": require('./public/javascripts/data/captions/cs446-fa16.js'),
+    "cs241": require('./public/javascripts/data/captions/cs241.js'),
+    "cs225": require('./public/javascripts/data/captions/cs225.js'),
+    "cs225-sp16": require('./public/javascripts/data/captions/cs225-sp16.js'),
+    "chem233-sp16": require('./public/javascripts/data/captions/chem233-sp16.js'),
+    "adv582": require('./public/javascripts/data/captions/adv582.js'),
+    "ece210": require('./public/javascripts/data/captions/ece210.js'),
+    "cs446-fa16": require('./public/javascripts/data/captions/cs446-fa16.js'),
 }
 
 app.get('/captions/:className/:index', function (request, response) {
-  var className = request.params.className.toLowerCase();
-  var captions = captionsMapping[className];
+    var className = request.params.className.toLowerCase();
+    var captions = captionsMapping[className];
 
-  response.writeHead(200, {
-    'Content-Type': 'application/json'
-  });
+    response.writeHead(200, {
+        'Content-Type': 'application/json'
+    });
 
-  var index = parseInt(request.params.index);
-  response.end(JSON.stringify({captions: captions[index]}));
+    var index = parseInt(request.params.index);
+    response.end(JSON.stringify({captions: captions[index]}));
 });
 
 var progressMustache = fs.readFileSync(mustachePath + 'progress.mustache').toString();
 app.get('/progress/:className', function (request, response) {
-  var className = request.params.className.toUpperCase();
+    var className = request.params.className.toUpperCase();
 
-  var view = {
-    className: className,
-  };
-  var html = Mustache.render(progressMustache, view);
+    var view = {
+        className: className,
+    };
+    var html = Mustache.render(progressMustache, view);
 
-  response.end(html);
+    response.end(html);
 });
 
 app.post('/progress/:className/:netId', function (request, response) {
-  var className = request.params.className.toUpperCase();
-  var netId = request.params.netId;
-  sendProgressEmail(className, netId, function () {
-    response.end('success');
-  });
+    var className = request.params.className.toUpperCase();
+    var netId = request.params.netId;
+    sendProgressEmail(className, netId, function () {
+        response.end('success');
+    });
 });
 
 function sendProgressEmail(className, netId, callback) {
-  client.smembers("ClassTranscribe::First::" + className, function (err, firstMembers) {
-    if (err) {
-      console.log(err);
-    }
-
-    client.smembers("ClassTranscribe::Finished::" + className, function (err, finishedMembers) {
-    if (err) {
-      console.log(err);
-    }
-
-      var count = 0;
-      firstMembers.forEach(function (member) {
-        var user = member.split("-")[1].replace(".json", "").replace(".txt", "");
-        if (user === netId) {
-          count++;
+    client.smembers("ClassTranscribe::First::" + className, function (err, firstMembers) {
+        if (err) {
+            console.log(err);
         }
-      });
 
-      finishedMembers.forEach(function (member) {
-        var user = member.split("-")[1].replace(".json", "").replace(".txt", "");
-        if (user === netId) {
-          count++;
-        }
-      });
+        client.smembers("ClassTranscribe::Finished::" + className, function (err, finishedMembers) {
+            if (err) {
+                console.log(err);
+            }
 
-      mailer.progressEmail(netId, className, count);
-      if (callback) {
-        callback();
-      }
+            var count = 0;
+            firstMembers.forEach(function (member) {
+                var user = member.split("-")[1].replace(".json", "").replace(".txt", "");
+                if (user === netId) {
+                    count++;
+                }
+            });
+
+            finishedMembers.forEach(function (member) {
+                var user = member.split("-")[1].replace(".json", "").replace(".txt", "");
+                if (user === netId) {
+                    count++;
+                }
+            });
+
+            mailer.progressEmail(netId, className, count);
+            if (callback) {
+                callback();
+            }
+        });
     });
-  });
 }
 
 var thirtyMinsInMilliSecs = 30 * 60 * 1000;
@@ -792,12 +813,12 @@ client.on("monitor", function (time, args, raw_reply) {
 });
 
 client.on('error', function (error) {
-	console.log('redis error'+error);
+    console.log('redis error'+error);
 });
 
 var port = 80;
 app.listen(port, function () {
-  console.log('listening on port ' + port + '!');
+    console.log('listening on port ' + port + '!');
 });
 
 //------------------------------------------

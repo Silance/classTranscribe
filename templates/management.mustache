@@ -44,8 +44,8 @@
 
 
     <div class="row">
-        <div class="col-8">
-            <table class="table" id="course-list">
+        <div class="col-lg-8">
+            <table class="table table-sm" id="course-list">
                 <tr id="#header">
                     <th>Subject</th>
                     <th>Course Number</th>
@@ -55,7 +55,9 @@
                 </tr>
             </table>
         </div>
-        <div class="col-4"></div>
+        <div class="col-lg-4">
+
+        </div>
     </div>
 
 
@@ -64,23 +66,31 @@
     <section>
 
         <form id="creation-form" method="POST">
-            <div>
-                <label>Subject</label>
-                <input type="text" class="form-control" id="fminput1" placeholder="Example input" value="CS" name="Subject">
-                <label>Course Number</label>
-                <input type="text" class="form-control" id="fminput2" placeholder="Another input" name="ClassNumber">
-                <label>CLass Name</label>
-                <input type="text" class="form-control" id="fminput3" placeholder="Example input" name="ClassName">
-                <label>Instructor</label>
-                <input type="text" class="form-control" id="fminput4" placeholder="Example input" name="Instructor">
-                <label>Section Number</label>
-                <input type="text" class="form-control" id="fminput5" placeholder="Example input" name="SectionNumber">
-            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <label>Subject</label>
+                    <input type="text" class="form-control" id="fminput1" placeholder="Example input" value="CS" name="Subject">
+                    <label>Course Number</label>
+                    <input type="text" class="form-control" id="fminput2" placeholder="Another input" name="ClassNumber">
 
-            <div>
-                <button type="submit" class="btn btn-primary" id="subbtn">Create Class</button>
-            </div>
+                </div>
+                <div class="col-md-3">
+                    <label>Class Name</label>
+                    <input type="text" class="form-control" id="fminput3" placeholder="Example input" name="ClassName">
+                    <label>Instructor</label>
+                    <input type="text" class="form-control" id="fminput4" placeholder="Example input" name="Instructor">
+                </div>
+                <div class="col-md-2">
+                    <label>Section Number</label>
+                    <input type="text" class="form-control" id="fminput5" placeholder="Example input" name="SectionNumber">
 
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-3">
+                    <button type="submit" class="btn btn-primary" id="subbtn">Create Class</button>
+                </div>
+            </div>
         </form>
 
     </section>
@@ -150,10 +160,10 @@
 
 
 
-<form action = "/manage-classes/gettest" method = "post" id="testdataform">
-    <input type="text" name="g1" value="Upvote" />
-    <button type="submit" name="g2" id="testdatabutton" class="button" value="testvalue">testing data</button>
-</form>
+<!--<form action = "/manage-classes/gettest" method = "post" id="testdataform">-->
+    <!--<input type="text" name="g1" value="Upvote" />-->
+    <!--<button type="submit" name="g2" id="testdatabutton" class="button" value="testvalue">testing data</button>-->
+<!--</form>-->
 
 <!--bootstrap grid test -->
 <div class="container">
@@ -283,10 +293,10 @@
                     alert(errorThrown);
                 }
             });
-
+            console.log(newCourse);
             // change list display
             $("#course-list").append('<tr>' +
-                    '<td>' + newCourse[0] + '</td>' +
+                    '<td>' + newCourse["Subject"] + '</td>' +
                     '<td>' + newCourse[1] + '</td>' +
                     '<td>' + newCourse[2] + '</td>' +
                     '<td>' + newCourse[3] + '</td>' +
