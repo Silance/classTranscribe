@@ -29,26 +29,92 @@ app.use(express.static('public'));
 
 
 //----------------------redis testing-------------------
-client.set("tkey", "tval");
-client.set("tkey2", "tval2");
-console.log(client.keys("*"));
-client.get("tkey", function (err, reply) {
-    console.log(reply.toString()); // Will print `OK`
-});
-function redis_probe_keys() {
-    client.keys("*", function (err, reply) {
-        console.log(JSON.stringify(reply));
-        console.log(reply.toString()); // Will print `OK`
-    });
+// client.set("tkey", "tval");
+// client.set("tkey2", "tval2");
+// console.log(client.keys("*"));
+// client.get("tkey", function (err, reply) {
+//     console.log(reply.toString()); // Will print `OK`
+// });
+// function redis_probe_keys() {
+//     client.keys("*", function (err, reply) {
+//         console.log(JSON.stringify(reply));
+//         console.log(reply.toString()); // Will print `OK`
+//     });
+// }
+// redis_probe_keys();
+// client.get("missingkey", function(err, reply) {
+//     // reply is null when the key is missing
+//     console.log(reply);
+// });
+// console.log("-----end of redis probing----");
+//----------------------end of redis testing-------------------
+
+//=======================Sample data for testing=====================================
+function getClassUid(university="", term="", number="", section="") {
+  if(!university|| !term|| !number|| !section){
+    console.log("potential problem in uid, empty/null value detected");
+  }
+  return university+"-"+term+"-"+number+"-"+section;
 }
-redis_probe_keys();
-client.get("missingkey", function(err, reply) {
-    // reply is null when the key is missing
+// // test cases
+// console.log("uid-test-1");
+// console.log(getClassUid());
+// console.log("uid-test-2");
+// console.log(getClassUid("23",34,54,23));
+// console.log("uid-test-3");
+// console.log(getClassUid(12,"a3",65));
+// console.log("uid-test-4");
+// console.log(getClassUid(12,null,65,"23"));
+
+
+
+// old sequential unique id
+client.get("ucid", function (err, reply) {
+   if(reply==null)
+       client.set("ucid", 100);
+});
+var schoolTermsList = ["Spring 2016", "Fall 2016","Spring 2017", "Fall 2017", "Spring 2018"];
+// 0-subject, 1-class number, 2-class name, 3-instructor name, 4-unique class id, 5-class description
+var courseList = {"Spring 2016":[["CS123",123,"Class name A","Instructor A", 1],
+    ["CS223",223,"Class name B","Instructor A", 2],
+    ["CS323",323,"Class name C","Instructor C",3]],
+    "Fall 2016":[["CS123",167,"Class name 167","Instructor C",4],
+        ["CS545",545,"Class name 545","Instructor J",5],
+        ["CS523",523,"Class name 523","Instructor Q",6]],
+    "Spring 2017":[], "Fall 2017":[], "Spring 2018":[]};
+schoolTermsList.forEach( function ( e) {
+    client.sadd("ClassTranscribe::Terms", "ClassTranscribe::Terms::"+e);
+    courseList[e].forEach(function (course) {
+      // Add  course
+        //console.log(course);
+        var classid=course[4];
+       client.sadd("ClassTranscribe::Terms::"+e, "ClassTranscribe::Terms::"+e+"::"+classid);
+       // Add Course Info
+        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "ClassNumber", course[0]);
+        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "ClassName", course[2]);
+        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "Instructor", course[3]);
+        client.hset("ClassTranscribe::Terms::"+e+"::"+classid, "ClassDesc", "To be added");
+    });
+});
+
+
+//--------testing--------------------
+client.hgetall("ClassTranscribe::Terms::Fall 2016::4", function (err, reply){
+    console.log(typeof (reply));
     console.log(reply);
 });
-console.log("-----end of redis probing----");
 
-//----------------------end of redis testing-------------------
+client.smembers("ClassTranscribe::Terms", function (err, reply){
+    console.log(typeof (reply));
+    console.log(reply);
+});
+
+console.log("Sample Data Loaded");
+//======================End of sample data==========================================================
+
+
+
+
 
 
 
@@ -76,33 +142,98 @@ app.get('/', function (request, response) {
   response.end(html);
 });
 
-//----------------Management Section-------------------------------------------
-var testvar1="default var";
-
+//----------------Management Page Section-------------------------------------------
+//var allterms="variable not properly init";
+var allterms = [];
 var managementMustache = fs.readFileSync(mustachePath + 'management.mustache').toString();
 app.get('/manage-classes', function (request, response) {
   response.writeHead(200, {
     'Content-Type': 'text/html'
   });
-    client.keys("*", function(err, reply) {
+    // get all terms data from the database
+    client.smembers("ClassTranscribe::Terms", function(err, reply) {
         // reply is null when the key is missing
-        testvar1= reply.toString();
-        console.log("testvar initted");
+        allterms=[];
+        reply.forEach(function (e) {
+            allterms.push(e.split("::")[2]);
+        })
+        console.log("terms initted");
+        console.log(allterms);
+        var view = {
+            termlist: allterms,
+        };
+        var html = Mustache.render(managementMustache, view);
+        response.end(html);
     });
-    var view = {
-        servervar1: testvar1,
-    };
-  var html = Mustache.render(managementMustache, view);
-  response.end(html);
 });
 
-app.post('/manage-classes/gettest', function (request, response) {
+
+// Add new class
+app.post('/manage-classes/newclass', function (request, response) {
     //response.render(servervar1: testvar1);
-    response.send(testvar1);
-    console.log("req noted");
-    console.log(request.body);
+    //response.send(testvar1);
+    console.log("new class added");
+    var term = "ClassTranscribe::Terms::"+request.body.Term;
+    client.get("ucid", function (err, reply) {
+        var ucid = reply;
+        // update the next avaliable unique class id
+        client.incr("ucid");
+        var classkey = term+"::"+ucid;
+        // add class
+        client.hset(classkey, "ClassNumber", request.body["ClassNumber"]);
+        client.hset(classkey, "ClassName", request.body["ClassName"]);
+        client.hset(classkey, "Instructor", request.body["Instructor"]);
+        client.hset(classkey, "ClassDesc", "To be added");
+        client.sadd(term, classkey);
+        response.end();
+    });
+//    console.log(request.body);
 });
 
+
+// app.post('/manage-classes/gettest', function (request, response) {
+//     //response.render(servervar1: testvar1);
+//     response.send(testvar1);
+//     console.log("req noted");
+//     console.log(request.body);
+// });
+
+
+//
+// var testvar = ["tp1", "tp2"];
+//
+// app.get('/test/:testvar', function (request, response) {
+//     var testvar = request.params.testvar.toLowerCase();
+//     response.writeHead(200, {
+//         'Content-Type': 'text/html'
+//     });
+//     var view = {
+//         tvar:testvar,
+//     };
+//     console.log(testvar);
+//     var html = Mustache.render(homeMustache,view);
+//     response.end(html);
+// });
+
+
+
+// return courses and their information offered in a term
+app.get('/manage-classes/getterminfo', function (request, response) {
+    console.log("term change noted");
+    console.log(request.query["term"]);
+    var term = "ClassTranscribe::Terms::"+request.query["term"];
+    client.smembers(term, function (err, reply) {
+        var commands = [];
+        reply.forEach(function (c){
+          // query every class to get info for display
+            commands.push(["hgetall", c]);
+        });
+        console.log("getterminfo command:"+commands);
+        client.multi(commands).exec(function (err, replies) {
+            response.send(replies);
+        });
+    });
+});
 
 //----------------Management Section-------------------------------------------
 
@@ -287,8 +418,6 @@ app.post('/first', function (request, response) {
     }
     transcriptionPath = "captions/first/" + className + "/" + captionFileName;
     client.sadd("ClassTranscribe::Transcriptions::" + transcriptionPath, transcriptions);
-    //TODO:remove this debuging line
-    redis_probe_keys();
     fs.writeFileSync(transcriptionPath, transcriptions, {mode: 0777});
   });
 

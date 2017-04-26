@@ -43,57 +43,57 @@
     </div>
 
 
-<div class="row">
-    <div class="col-8">
-        <table class="table" id="course-list">
-            <tr id="#header">
-                <th>Subject</th>
-                <th>Course Number</th>
-                <th>Course Name</th>
-                <th>Course Instructor</th>
-                <th>Action</th>
-            </tr>
-        </table>
+    <div class="row">
+        <div class="col-8">
+            <table class="table" id="course-list">
+                <tr id="#header">
+                    <th>Subject</th>
+                    <th>Course Number</th>
+                    <th>Course Name</th>
+                    <th>Course Instructor</th>
+                    <th>Action</th>
+                </tr>
+            </table>
+        </div>
+        <div class="col-4"></div>
     </div>
-    <div class="col-4"></div>
-</div>
 
 
 
 
-<section>
+    <section>
 
-    <form id="creation-form">
-        <div>
-            <label>Subject</label>
-            <input type="text" class="form-control" id="fminput1" placeholder="Example input" value="CS" name="ip1">
-            <label>Course Number</label>
-            <input type="text" class="form-control" id="fminput2" placeholder="Another input" name="ip2">
-            <label>CLass Name</label>
-            <input type="text" class="form-control" id="fminput3" placeholder="Example input" name="ip3">
-            <label>Instructor</label>
-            <input type="text" class="form-control" id="fminput4" placeholder="Example input" name="ip4">
-            <label>Section Number</label>
-            <input type="text" class="form-control" id="fminput5" placeholder="Example input" name="ip5">
-        </div>
+        <form id="creation-form" method="POST">
+            <div>
+                <label>Subject</label>
+                <input type="text" class="form-control" id="fminput1" placeholder="Example input" value="CS" name="Subject">
+                <label>Course Number</label>
+                <input type="text" class="form-control" id="fminput2" placeholder="Another input" name="ClassNumber">
+                <label>CLass Name</label>
+                <input type="text" class="form-control" id="fminput3" placeholder="Example input" name="ClassName">
+                <label>Instructor</label>
+                <input type="text" class="form-control" id="fminput4" placeholder="Example input" name="Instructor">
+                <label>Section Number</label>
+                <input type="text" class="form-control" id="fminput5" placeholder="Example input" name="SectionNumber">
+            </div>
 
-        <div>
-            <button type="submit" class="btn btn-primary" id="subbtn">Create Class</button>
-        </div>
+            <div>
+                <button type="submit" class="btn btn-primary" id="subbtn">Create Class</button>
+            </div>
 
-    </form>
+        </form>
 
-</section>
+    </section>
 
 
 
-<section>
-    Classes to add:
-    <ul id="cart">
-        <li>1</li>
-        <li>2</li>
-    </ul>
-</section>
+    <section>
+        Classes to add:
+        <ul id="cart">
+            <li>1</li>
+            <li>2</li>
+        </ul>
+    </section>
 
 
 
@@ -165,6 +165,9 @@
                 </div>
                 <div class="col-md-6">
                     <a href="">Column2</a>
+                    <button class="whyisclassnotworking">1234</button>
+                    <button class="whyisclassnotworking">same1234</button>
+                    <button class="rmbn">placeholder</button>
                 </div>
                 <div class="col-md-4">
                     <a href="#myModal1" data-toggle="modal">SHARE</a>
@@ -193,19 +196,10 @@
 <script src="/javascripts/libraries/jquery.sticky.js"></script> <!-- jQuery Stick Menu -->
 <!--<script src="/javascripts/libraries/homeScript.js"></script> &lt;!&ndash; All script &ndash;&gt;-->
 <script>
-    // testing data
-    var schoolTermsList = ["","Spring 2016", "Fall 2016","Spring 2017", "Fall 2017", "Spring 2018"];
-    // subject, class number, class name, instructor name, unique class id
-    var courseList = {"Spring 2016":[["CS123",123,"Class name A","Instructor A", 1],
-        ["CS223",223,"Class name B","Instructor A", 2],
-        ["CS323",323,"Class name C","Instructor C",3]],
-        "Fall 2016":[["CS123",167,"Class name 167","Instructor C",4],
-            ["CS545",545,"Class name 545","Instructor J",5],
-            ["CS523",523,"Class name 523","Instructor Q",6]],
-        "Spring 2017":[], "Fall 2017":[], "Spring 2018":[]};
-    var uid=7;
-
+    $( document ).ready(function() {
+    });
     // populate school term options
+    var schoolTermsList="{{termlist}}".split(",");
     var termSelection = document.getElementById("school-term");
     schoolTermsList.forEach(function(element) {
         var option = document.createElement("option");
@@ -213,38 +207,51 @@
         option.value = element;
         termSelection.add(option);
     });
+    // get information for the default selection
+    getTermInfo();
 
-    // populate course list for the selected term, refresh on change
-    var courses = document.getElementById("course-list");
-    $( "#school-term" ).change(function(e) {
+    // generate html for the selected term
+    function getTermInfo(){
         var term = document.getElementById("school-term");
         var selectedTerm = $("#school-term").val();
-        var classes = courseList[selectedTerm];
-        var html = '';
-        html+='<tr id="#header">'+
-                '<th>Subject</th>'+
-                '<th>Course Number</th>'+
-                '<th>Course Name</th>'+
-                '<th>Course Instructor</th>'+
-                '<th>Action</th>'+
-                '</tr>';
-        classes.forEach(function(elem){
-            html += '<tr>';
-            for (var i = 0; i < 4; i++) {
-                html += '<td>' + elem[i] + '</td>';
+        console.log(selectedTerm);
+        $.ajax({
+            url : "/manage-classes/getterminfo",
+            type: "GET",
+            data: {"term":selectedTerm},
+            success: function (data) {
+                console.log(data);
+                var html = '';
+                html+='<tr id="#header">'+
+                        '<th>Subject</th>'+
+                        '<th>Course Number</th>'+
+                        '<th>Course Name</th>'+
+                        '<th>Course Instructor</th>'+
+                        '<th>Action</th>'+
+                        '</tr>';
+                data.forEach(function (c) {
+                    html += '<tr>';
+                    html += '<td>' + c["ClassName"] + '</td>';
+                    html += '<td>' + c["ClassNumber"] + '</td>';
+                    html += '<td>' + c["ClassName"] + '</td>';
+                    html += '<td>' + c["Instructor"] + '</td>';
+                    html += '<td>' + '<button class="rmbn\">action</button>' + '</td>';
+                    html += '</tr>';
+                    //append created html to the table body:
+                    //$('#course-list').append(html);
+                });
+                $("#course-list").html(html);
+            },
+            error: function (jXHR, textStatus, errorThrown) {
+                //alert(errorThrown);
             }
-            html += '<td>' + '<button>action</button>' + '</td>';
-            html += '</tr>';
-
-            //append created html to the table body:
-            //$('#course-list').append(html);
         });
-        $("#course-list").html(html);
-        //$( "div.courses-data" ).replaceWith(html);
-        // print out js object detail
-        //alert(JSON.stringify(e, null, 4));
-    });
+    }
 
+    // refresh course list on change
+    $( "#school-term" ).change(function() {
+        getTermInfo();
+    });
 
 
     // create new course
@@ -260,59 +267,72 @@
             newCourse.push(elem["value"]);
             //alert(JSON.stringify(elem["value"], null, 4));
         });
-        //alert(JSON.stringify(newCourse, null, 4));
-        //alert($("#school-term").val());
-        //alert($("#school-term").val()!='')
-        if($("#school-term").val()!='') {
-            courseList[$("#school-term").val()].push(newCourse);
-            //alert(JSON.stringify(courseList, null, 4));
-            // change list
 
+
+        if($("#school-term").val()!='') {
+            //alert($("#creation-form").serialize());
+            $.ajax({
+                url : "/manage-classes/newclass/",
+                type: "POST",
+                //data: {"data":$("#creation-form").serializeArray(),"term":$("#school-term").val()},
+                data: $("#creation-form").serialize()+"&Term="+$( "#school-term" ).val(),
+                success: function (data) {
+                    console.log(data);
+                },
+                error: function (jXHR, textStatus, errorThrown) {
+                    alert(errorThrown);
+                }
+            });
+
+            // change list display
             $("#course-list").append('<tr>' +
                     '<td>' + newCourse[0] + '</td>' +
                     '<td>' + newCourse[1] + '</td>' +
                     '<td>' + newCourse[2] + '</td>' +
                     '<td>' + newCourse[3] + '</td>' +
-                    '<td>' + '<button>action</button>' + '</td>' +
+                    '<td>' + '<button class="testremovebutton">action</button>' + '</td>' +
                     '</tr>');
         }
     });
 
 
-    var x;
     $( "#testdatabutton" ).click(function() {
-        console.log(x);
+        //console.log(x);
         var html = "<li>"+"testli"+"</li>";
         $('#cart').append(html);
     });
 
-    $("#testdataform").submit(function(e){
-        e.preventDefault();
-        //$.ajax({});
-        console.log($("#testdataform").serializeArray());
-        $.ajax({
-            url : $(this).attr('action'),
-            type: "POST",
-            data: $("#testdataform").serialize(),
-            success: function (data) {
-                console.log(data);
-                x = data;
-            },
-            error: function (jXHR, textStatus, errorThrown) {
-                alert(errorThrown);
-            }
-        });
+    console.log("testing remove button");
+    $(".rmbn").on('click', ".rmbn",function (e) {
+        console.log(e);
+       console.log(this);
+       console.log("remove button clicked");
     });
 
-
-
-
-
-    $( document ).ready(function() {
-        console.log( "ready!" );
-        x = "{{servervar1}}";
-        console.log("clientside-"+x);
+    $(".whyisclassnotworking").click(function (e) {
+        console.log(e);
+        console.log(this);
     });
+
+//
+//    $("#testdataform").submit(function(e){
+//        e.preventDefault();
+//        //$.ajax({});
+//        console.log($("#testdataform").serializeArray());
+//        $.ajax({
+//            url : $(this).attr('action'),
+//            type: "POST",
+//            data: $("#testdataform").serialize(),
+//            success: function (data) {
+//                console.log(data);
+//                x = data;
+//            },
+//            error: function (jXHR, textStatus, errorThrown) {
+//                alert(errorThrown);
+//            }
+//        });
+//    });
+
 
 
 </script>
