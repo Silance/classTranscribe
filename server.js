@@ -105,7 +105,7 @@ schoolTermsList.forEach( function ( t) {
         client.hset("ClassTranscribe::Course::"+classid, "SectionNumber", course[2]);
         client.hset("ClassTranscribe::Course::"+classid, "ClassName", course[3]);
         client.hset("ClassTranscribe::Course::"+classid, "ClassDesc", course[4]);
-        client.hset("ClassTranscribe::Course::"+classid, "University", course[6]);
+        client.hset("ClassTranscribe::Course::"+classid, "University", course[5]);
         client.hset("ClassTranscribe::Course::"+classid, "Instructor", course[6]);
     });
 });
@@ -185,22 +185,23 @@ app.get('/manage-classes', function (request, response) {
 app.post('/manage-classes/newclass', function (request, response) {
     console.log("new class to be added, start processing...");
     var term = "ClassTranscribe::Terms::"+request.body.Term;
-    var classid = getClassUid(university=request.body["University"], term=request.body["Term"], number=request.body["University"], section="");
+    var classid = getClassUid(university=request.body["University"], term=request.body["Term"], number=request.body["University"], section=request.body["SectionNumber"]);
+    var course = request.body;
     // add class
     client.sadd("ClassTranscribe::CourseList", "ClassTranscribe::Course::"+classid); // add class to class list
-    client.sadd("ClassTranscribe::Terms::"+t, "ClassTranscribe::Course::"+classid); // add class to term list
-    client.sadd("ClassTranscribe::SubjectList", "ClassTranscribe::Subject::"+course[0]); // add class subject to subject list
-    client.sadd("ClassTranscribe::Subject::"+course[0], "ClassTranscribe::Course::"+classid); // add class to the subject
+    client.sadd(term, "ClassTranscribe::Course::"+classid); // add class to term list
+    client.sadd("ClassTranscribe::SubjectList", "ClassTranscribe::Subject::"+course["Subject"]); // add class subject to subject list
+    client.sadd("ClassTranscribe::Subject::"+course["Subject"], "ClassTranscribe::Course::"+classid); // add class to the subject
 
 
     // Add Course Info
-    client.hset("ClassTranscribe::Course::"+classid, "Subject", course[0]);
-    client.hset("ClassTranscribe::Course::"+classid, "ClassNumber", course[1]);
-    client.hset("ClassTranscribe::Course::"+classid, "SectionNumber", course[2]);
-    client.hset("ClassTranscribe::Course::"+classid, "ClassName", course[3]);
-    client.hset("ClassTranscribe::Course::"+classid, "ClassDesc", course[4]);
-    client.hset("ClassTranscribe::Course::"+classid, "University", course[6]);
-    client.hset("ClassTranscribe::Course::"+classid, "Instructor", course[6]);
+    client.hset("ClassTranscribe::Course::"+classid, "Subject", course["Subject"]);
+    client.hset("ClassTranscribe::Course::"+classid, "ClassNumber", course["ClassNumber"]);
+    client.hset("ClassTranscribe::Course::"+classid, "SectionNumber", course["SectionNumber"]);
+    client.hset("ClassTranscribe::Course::"+classid, "ClassName", course["ClassName"]);
+    client.hset("ClassTranscribe::Course::"+classid, "ClassDesc", course["ClassDescription"]);
+    client.hset("ClassTranscribe::Course::"+classid, "University", course["University"]);
+    client.hset("ClassTranscribe::Course::"+classid, "Instructor", course["Instructor"]);
     response.end();
 //    console.log(request.body);
 });

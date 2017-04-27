@@ -19,27 +19,32 @@
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 </head>
 
-<body>
+<body style="padding-top: 10rem">
+
+<nav class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+        <h1>Class Transcribe</h1>
+    </div>
+</nav>
 
 <div class="container">
 
+
+
     <div class="row">
-        <div class="col">
+        <div class="col-md-4">
             Select a term:
             <select id="school-term">
             </select>
         </div>
-        <div class="col">
+        <div class="col-md-8">
             <input type='text' id='search-input'>
             <input type='button' id='search-button' value='Search'>
-        </div>
-        <div class="col">
-
         </div>
     </div>
 
 
-    <div class="row justify-content-start">
+    <div style="margin:3rem">
     </div>
 
 
@@ -47,10 +52,13 @@
         <div class="col-lg-8">
             <table class="table table-sm" id="course-list">
                 <tr id="#header">
+                    <th>University</th>
                     <th>Subject</th>
                     <th>Course Number</th>
+                    <th>Section Number</th>
                     <th>Course Name</th>
                     <th>Course Instructor</th>
+                    <th>Course Descruption</th>
                     <th>Action</th>
                 </tr>
             </table>
@@ -64,7 +72,9 @@
 
 
     <section>
-
+        <div class="row">
+            <h3>Create a new course</h3>
+        </div>
         <form id="creation-form" method="POST">
             <div class="row">
                 <div class="col-md-3">
@@ -83,7 +93,15 @@
                 <div class="col-md-2">
                     <label>Section Number</label>
                     <input type="text" class="form-control" id="fminput5" placeholder="Example input" name="SectionNumber">
+                    <label>University</label>
+                    <input type="text" class="form-control" id="fminput6" placeholder="Example input" name="University">
+                </div>
+            </div>
 
+            <div class="row">
+                <div class="col-md-8">
+                    <label>Course Description</label>
+                    <input type="text" class="form-control" id="fminput7" placeholder="Example input" name="ClassDescription">
                 </div>
             </div>
             <div class="row">
@@ -166,26 +184,26 @@
 <!--</form>-->
 
 <!--bootstrap grid test -->
-<div class="container">
-    <div class="row">
-        <div class="col-md-12">
-            <div class="row">
-                <div class="col-md-2">
-                    <a href="">About</a>
-                </div>
-                <div class="col-md-6">
-                    <a href="">Column2</a>
-                    <button class="whyisclassnotworking">1234</button>
-                    <button class="whyisclassnotworking">same1234</button>
-                    <button class="rmbn">placeholder</button>
-                </div>
-                <div class="col-md-4">
-                    <a href="#myModal1" data-toggle="modal">SHARE</a>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<!--<div class="container">-->
+    <!--<div class="row">-->
+        <!--<div class="col-md-12">-->
+            <!--<div class="row">-->
+                <!--<div class="col-md-2">-->
+                    <!--<a href="">About</a>-->
+                <!--</div>-->
+                <!--<div class="col-md-6">-->
+                    <!--<a href="">Column2</a>-->
+                    <!--<button class="whyisclassnotworking">1234</button>-->
+                    <!--<button class="whyisclassnotworking">same1234</button>-->
+                    <!--<button class="rmbn">placeholder</button>-->
+                <!--</div>-->
+                <!--<div class="col-md-4">-->
+                    <!--<a href="#myModal1" data-toggle="modal">SHARE</a>-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+    <!--</div>-->
+<!--</div>-->
 
 
 
@@ -233,18 +251,24 @@
                 console.log(data);
                 var html = '';
                 html+='<tr id="#header">'+
+                        '<th>University</th>'+
                         '<th>Subject</th>'+
                         '<th>Course Number</th>'+
+                        '<th>Section Number</th>'+
                         '<th>Course Name</th>'+
                         '<th>Course Instructor</th>'+
+                        '<th>Course Descruption</th>'+
                         '<th>Action</th>'+
                         '</tr>';
                 data.forEach(function (c) {
                     html += '<tr>';
-                    html += '<td>' + c["ClassName"] + '</td>';
-                    html += '<td>' + c["ClassNumber"] + '</td>';
+                    html += '<td>' + c["University"] + '</td>';
+                    html += '<td>' + c["Subject"] + '</td>';
+                    html += '<td>' + c["ClassNumber"] + '</td>';;
+                    html += '<td>' + c["SectionNumber"] + '</td>';
                     html += '<td>' + c["ClassName"] + '</td>';
                     html += '<td>' + c["Instructor"] + '</td>';
+                    html += '<td>' + c["ClassDesc"] + '</td>';
                     html += '<td>' + '<button class="rmbn\">action</button>' + '</td>';
                     html += '</tr>';
                     //append created html to the table body:
@@ -296,10 +320,20 @@
             console.log(newCourse);
             // change list display
             $("#course-list").append('<tr>' +
-                    '<td>' + newCourse["Subject"] + '</td>' +
-                    '<td>' + newCourse[1] + '</td>' +
+                    '<td>' + newCourse[6] + '</td>'+
+                    '<td>' + newCourse[0] + '</td>'+
+                    '<td>' + newCourse[1] + '</td>'+
+                    '<td>' + newCourse[4] + '</td>'+
                     '<td>' + newCourse[2] + '</td>' +
-                    '<td>' + newCourse[3] + '</td>' +
+                    '<td>' + newCourse[3] + '</td>'+
+                    '<td>' + newCourse[6] + '</td>'+
+//                    '<td>' + newCourse["University"] + '</td>'+
+//                    '<td>' + newCourse["Subject"] + '</td>'+
+//                    '<td>' + newCourse["ClassNumber"] + '</td>'+
+//                    '<td>' + newCourse["SectionNumber"] + '</td>'+
+//                    '<td>' + newCourse["ClassName"] + '</td>' +
+//                    '<td>' + newCourse["Instructor"] + '</td>'+
+//                    '<td>' + newCourse["ClassDesc"] + '</td>'+
                     '<td>' + '<button class="testremovebutton">action</button>' + '</td>' +
                     '</tr>');
         }
@@ -344,9 +378,18 @@
 //    });
 
 
+    $(function() {
+        $("#course-list").dataTable({
+            "iDisplayLength": 2,
+            "aLengthMenu": [[10, 25, 50, 100,  -1], [10, 25, 50, 100, "All"]]
+        });
+    });
+
 
 </script>
 
+<script src="js/datatables/jquery.dataTables.js" type="text/javascript"></script>
+<script src="js/datatables/dataTables.bootstrap.js" type="text/javascript"></script>
 </body>
 
 </html>
