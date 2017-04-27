@@ -8,7 +8,7 @@
 */
 
 
-@import url(http://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,700,900&subset=latin,latin-ext);
+@import url(https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,200,300,700,900&subset=latin,latin-ext);
 
 
 html, body{
@@ -73,7 +73,7 @@ h1 span{
   position:relative;
   width:100%;
   height:580px;
-  background:url('./img/background.jpg') 0px 0px fixed;
+  background:url('../stylesheets/img/background.jpg') 0px 0px fixed;
   background-size:cover;
   background-repeat: no-repeat;
 }
@@ -147,7 +147,7 @@ h1 span{
   margin-left: -10px;
   width: 21px;
   height: 29px;
-  background: url(img/arrow-down.png) no-repeat center center;
+  background: url(../stylesheets/img/arrow-down.png) no-repeat center center;
   display: block;
   -webkit-animation: bounce-fade 1.2s infinite; /* Safari 4+ */
   -moz-animation:    bounce-fade 1.2s infinite; /* Fx 5+ */
@@ -209,7 +209,6 @@ h1 span{
   line-height:100px;
 
 }
-
 
 /* Menu */
 
@@ -376,7 +375,7 @@ h1 span{
   position:relative;
   margin:0 auto;
   border:8px solid #ebebeb;
-  background: url(img/icons/question.png) #f3f3f3 no-repeat center center;
+  background: url(../stylesheets/img/icons/question.png) #f3f3f3 no-repeat center center;
   -moz-border-radius:174px;
   -webkit-border-radius:174px;
   border-radius: 174px;
@@ -390,7 +389,7 @@ h1 span{
 }
 
 .about-us .column-one .circle-one:hover{
-  background: url(img/icons/question.png) #2fa68e no-repeat center center;
+  background: url(../stylesheets/img/icons/question.png) #2fa68e no-repeat center center;
 
 }
 
@@ -407,7 +406,7 @@ h1 span{
   position:relative;
   margin:0 auto;
   border:8px solid #ebebeb;
-  background: url(img/icons/student.png) #f3f3f3 no-repeat center center;
+  background: url(../stylesheets/img/icons/student.png) #f3f3f3 no-repeat center center;
   -moz-border-radius:174px;
   -webkit-border-radius:174px;
   border-radius: 174px;
@@ -421,7 +420,7 @@ h1 span{
 }
 
 .about-us .column-two .circle-two:hover{
-  background: url(img/icons/student.png) #2fa68e no-repeat center center;
+  background: url(../stylesheets/img/icons/student.png) #2fa68e no-repeat center center;
 }
 
 
@@ -438,7 +437,7 @@ h1 span{
   position:relative;
   margin:0 auto;
   border:8px solid #ebebeb;
-  background: url(img/icons/professor.png) #f3f3f3 no-repeat center center;
+  background: url(../stylesheets/img/icons/professor.png) #f3f3f3 no-repeat center center;
   -moz-border-radius:174px;
   -webkit-border-radius:174px;
   border-radius: 174px;
@@ -452,7 +451,7 @@ h1 span{
 }
 
 .about-us .column-three .circle-three:hover{ 
-  background: url(img/icons/professor.png) #2fa68e no-repeat center center;
+  background: url(../stylesheets/img/icons/professor.png) #2fa68e no-repeat center center;
 }
 
 

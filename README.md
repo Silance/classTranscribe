@@ -11,15 +11,14 @@ existing lecture recordings and enable enhanced educational features including c
 3. If you are contributing to an existing ClassTranscribe instance, ask the admin for the redis and email credentials. Otherwise, you'll need run your own redis instance ([tutorial here](http://redis.io/topics/quickstart)) and set up a gmail account.
 4. Run the ClassTranscribe docker image locally by running `docker run -e "REDIS_PASS=<pass>" -e "REDIS_HOST=<host>" -e "MAILER_ID=<email>" -e "MAILER_PASS=<pass>" -p 80:80 -a stdout -a stdin -i -t obmelvin/class_transcribe:v4 /bin/bash`. 
 5. Once inside the docker shell update the repo `git pull origin master`. Then install node dependencies `npm install`.
-(or replace git pull with 
-git fetch origin master
-git reset --hard FETCH_HEAD
-git clean -df
-)
-
 6. Launch the server as a background process within the container `nohup sudo -E node server.js >> public/server.log &`. (Control-C to get out of command, server will remain running).
 7. Launch the transcription aligner as a background process `nohup sudo -E node second_pass.js >> public/second_pass.log &`. (Control-C to get out of command, transcription aligner will remain running).
 8. To reconnect to the container, run `sudo docker exec -i -t <docker_ps_id> bash`. Use `docker ps` to find `<docker_ps_id>`.
+
+## How to run a docker build if you have the source code (DO THIS WHEN YOU CHANGE CODE AND CONFIRM IT WORKS - It effectively tests in our production environment)
+
+1. docker build -t classtranscribe .
+2. sudo docker run -i -t -d -p 443:8000 -p 80:7000 -e "REDIS_PASS=REDACTED" -e "REDIS_HOST=REDACTED" -e "MAILER_ID=REDACTED" -e "MAILER_PASS=REDACTED" classtranscribe /bin/bash -c "npm install; npm start"
 
 ## How to launch a class
 
