@@ -1,4 +1,5 @@
 var router = express.Router();
+var shelper = require("../../utility_scripts/searchContent.js");
 //===========================my section=========================================
 
 //=======================Sample data for testing=====================================
@@ -66,13 +67,28 @@ router.get('/manage-classes', function (request, response) {
         })
         console.log("terms initted");
         console.log(allterms);
+        if (request.isUnauthenticated()) {
+            var form = "<section> <div class=\"row\"> <h3>Create a new course</h3> </div> <form id=\"creation-form\" method=\"POST\"> <div class=\"row\"> <div class=\"col-md-3\"> <label>Subject</label> <input type=\"text\" class=\"form-control\" id=\"fminput1\" placeholder=\"Example input\" value=\"CS\" name=\"Subject\"> <label>Course Number</label> <input type=\"text\" class=\"form-control\" id=\"fminput2\" placeholder=\"Another input\" name=\"ClassNumber\"> </div> <div class=\"col-md-3\"> <label>Class Name</label> <input type=\"text\" class=\"form-control\" id=\"fminput3\" placeholder=\"Example input\" name=\"ClassName\"> <label>Instructor</label> <input type=\"text\" class=\"form-control\" id=\"fminput4\" placeholder=\"Example input\" name=\"Instructor\"> </div> <div class=\"col-md-2\"> <label>Section Number</label> <input type=\"text\" class=\"form-control\" id=\"fminput5\" placeholder=\"Example input\" name=\"SectionNumber\"> <label>University</label> <input type=\"text\" class=\"form-control\" id=\"fminput6\" placeholder=\"Example input\" name=\"University\"> </div> </div> <div class=\"row\"> <div class=\"col-md-8\"> <label>Course Description</label> <input type=\"text\" class=\"form-control\" id=\"fminput7\" placeholder=\"Example input\" name=\"ClassDescription\"> </div> </div> <div class=\"row\"> <div class=\"col-md-3\"> <button type=\"submit\" class=\"btn btn-primary\" id=\"subbtn\">Create Class</button> </div> </div> </form> </section>";
+        }
+        else{
+            var form = "";
+        }
         var view = {
             termlist: allterms,
             className: "cs225-sp16",
-            exampleTerm: exampleTerms["cs225-sp16"]
+            exampleTerm: exampleTerms["cs225-sp16"],
+            createform:form
         };
         var html = Mustache.render(managementMustache, view);
         console.log("is authenticated = "+request.isAuthenticated());
+
+
+
+
+
+
+
+
 
 
         response.end(html);
@@ -109,14 +125,18 @@ router.post('/manage-classes/newclass', function (request, response) {
 // handle search
 router.get('/manage-classes/search/', function (request, response) {
     console.log("start processing search...");
-    var term = "ClassTranscribe::Terms::"+request.query.Search;
-    console.log(term);
+    //var searchterm = "ClassTranscribe::Terms::"+request.query.Search;
+    var searchterm = request.query.Search;
+    console.log(searchterm);
+    //generateSearch(searchterm);
+    var sch = new shelper.SearchHelper(request.query.Search)
+    sch._start(function (line) {
+        console.log(line);
+    })
     response.end();
 });
 
-function generateSearch(){
 
-}
 
 
 
